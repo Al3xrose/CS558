@@ -1,0 +1,35 @@
+Alex Rose
+
+Int:
+Const n
+
+String:
+Load x
+
+(+ Expr Expr):
+e1.code + e2.code + Plus
+
+(- Expr Expr):
+e1.code + e2.code + Const(-1) + Times + Plus
+
+(* Expr Expr):
+e1.code + e2.code + Times
+
+(/ Expr Expr):
+e1.code + e2.code + Divrem + Pop
+
+(% Expr Expr):
+e1.code + e2.code + Divrem + Swap + Pop
+
+(<= Expr Expr):
+e1.code + e2.code + Lessequ
+
+(:= String Expr):
+e1.code + e1.code + Store x
+
+(while Expr Expr):
+
+
+(if expr expr expr):
+e1.code + Branchz i + e2.code + Label i + e3.code
+
