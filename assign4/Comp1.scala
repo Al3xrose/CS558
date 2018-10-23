@@ -33,17 +33,19 @@ object Comp1 {
     case While(c,b) => {
       val startLabel = newLabel()
       val endLabel = newLabel()
-      Label(startLabel)::comp(c):::Branchz(endLabel)::comp(b):::Branch(startLabel)::Label(endLabel)::Const(0)::Nil
+      Label(startLabel)::comp(c):::Branchz(endLabel)::comp(b):::pop::Branch(startLabel)::Label(endLabel)::Const(0)::Nil
     }
     case If(c,t,f)  =>{
       val falseLabel = newLabel()
       val endLabel = newLabel()
       comp(c):::Branchz(falseLabel)::comp(t):::Branch(endLabel)::Label(falseLabel)::comp(f):::Label(endLabel)::Nil
     }
-//    case Write(e)   => // ... add code ...
-//    case Seq(e1,e2) => // ... add code ...
-//    case Skip()     => // ... add code ...
-//    case For(x,e1,e2,e3) => // ... add code ...
+    case Write(e)   => {
+      comp(e):::comp(e):::print::Nil
+    }
+    case Seq(e1,e2) => comp(e1):::pop::comp(e2):::Nil
+    case Skip()     => Const(0)::Nil
+    //case For(x,e1,e2,e3) => 
   }
 
   def newLabel() = {
