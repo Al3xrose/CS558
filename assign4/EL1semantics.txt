@@ -28,8 +28,16 @@ e1.code + e2.code + Lessequ
 e1.code + e1.code + Store x
 
 (while Expr Expr):
+Label Start + e1.code + Branchz End + e2.code + Pop + Branch Start + Label End + Const 0 
 
+(if Expr Expr Expr):
+e1.code + Branchz False + e2.code + Branch End + Label False + e3.code + Label End
 
-(if expr expr expr):
-e1.code + Branchz i + e2.code + Label i + e3.code
+(write Expr):
+e1.code + e1.code + Print
 
+(seq Expr Expr):
+e1.code + Pop + e2.code
+
+(skip):
+Const 0
