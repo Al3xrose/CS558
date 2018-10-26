@@ -1,0 +1,19 @@
+Alex Rose
+
+a) recursion.s1
+fac is recursive. (call fac found within instructions for fac:)
+facTR is recursive. (call helper.2452 found within instructions for helper.2452)
+g is recursive. (call g)
+gTR is recursive. (call helper.2465)
+h is recursive. (call h)
+hTR is recursive. (call helper.2475)
+
+b) recursion.s2
+fac not recursive, no call to fac
+facTR not recursive
+g is recursive, found call g
+gTR not recursive
+h not recursive
+hTR not recursive
+
+The O1 optimization kept recursion in all six functions, while the O2 function kept recursive form only in function g, and converted the rest to iterative form.  The O2 optimization also seemed to not preserve the helper functions, instead simply translating their instructions directly to the instructions of the functions they are nested within.
