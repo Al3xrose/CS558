@@ -116,13 +116,20 @@ object Interp2 {
         case Eq(l,r) => (interpE(env,l),interpE(env,r)) match {
           case (NumV(lv),NumV(rv)) => if(lv == rv)NumV(1) else NumV(0)
           case (PairV(a1),PairV(a2)) => if(a1 == a2)NumV(1) else NumV(0)
-          case _ => throw InterpException("equality comparison of different types")
+          case _ => throw InterpException("Equality check of different types")
         }
 
-    //    case Deq(l,r) =>
-          // if you choose to implement this expr, replace the following line
-          // with actual code
-     //     throw InterpException("Deq implementation is optional")
+        case Deq(l,r) => (interpE(env,l),interpE(env,r)) match {
+          case (NumV(lv),NumV(rv)) => if(lv==rv)NumV(1) else NumV(0)
+          case (PairV(a1), PairV(a2)) => {
+            val e1 = get(a1)
+            val e2 = get(a2)
+            if(a1 == a2) NumV(1)
+            else if(interpE(env, Deq((Fst(l)), (Fst(r)))) == NumV(1) && interpE(env, Deq((Snd(l)), (Snd(r)))) == NumV(1)) NumV(1) else NumV(0)
+          }
+
+          case _ => throw InterpException("Deep equality check of different types")
+        }
 
         case Assgn(x,e) => {
           val a = env.getOrElse(x, throw InterpException("undefined variable:" + x))
