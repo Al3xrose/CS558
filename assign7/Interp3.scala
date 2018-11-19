@@ -121,66 +121,37 @@ object Interp3 {
         case Skip() => NumV(0)
 
         case Let(x,b,e) => {
-
-          //replaceE(b,x,Var("x_"))
-          /*if(callByName){
-            val newX : String = x + "_"
-            val newB = replaceE(b, x, Var(newX))
-            val newE = replaceE(e, x, Var(newX))
-
-            val a = heap.allocate(1)
-            val bVal = interpE(env, newB)
-            set(a, bVal)
-            interpE(env + (newX -> a), newE)
-          }
-          else{*/
-            val bVal = interpE(env, b)
+          val bVal = interpE(env, b)
+          var a : Addr = null
+          if(useHeap)
+            a = heap.allocate(1)
+          else
+            a = stack.push()
+          set(a, bVal)
+          val ret = interpE(env + (x -> a), e)
+          if(!useHeap)
+            stack.pop()
+          ret
+        }
+     
+        case LetRec(f,b,e) => b match {
+          case Fun(x, fb) => {
             var a : Addr = null
             if(useHeap)
               a = heap.allocate(1)
             else
               a = stack.push()
+            val bVal = interpE(env + (f -> a), b)
             set(a, bVal)
-            val ret = interpE(env + (x -> a), e)
+            val ret = interpE(env + (f -> a), e)
             if(!useHeap)
               stack.pop()
             ret
-         // }
-        }
-     
-        case LetRec(f,b,e) => b match {
-          case Fun(x, fb) => {
-            /*if(callByName){
-              val newF : String = f + "_"
-              val newB = replaceE(b, f, Var(newF))
-              val newE = replaceE(e, f, Var(newF))
-
-              val a = heap.allocate(1)
-              val bVal = interpE(env + (newF -> a), newB)
-              set(a, bVal)
-              interpE(env + (newF -> a), newE)
-            }
-            else{*/
-              var a : Addr = null
-              if(useHeap)
-               a = heap.allocate(1)
-              else
-               a = stack.push()
-              val bVal = interpE(env + (f -> a), b)
-              set(a, bVal)
-              val ret = interpE(env + (f -> a), e)
-              if(!useHeap)
-                stack.pop()
-              ret
-            }
-         // }
+          }
           case _ => throw InterpException("Must pass fun to LetRec")
         }
 
         case Fun(x,b) => {
-          /*if(callByName)
-            ClosureV(x + "_", replaceE(b, x, Var(x + "_")), env)*/
-          //else
             ClosureV(x, b, env)
         }
 
