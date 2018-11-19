@@ -4,6 +4,6 @@ Alex Rose
    The value of the second expression should be 4.
 
 2.  The value of the first expression according to the interpreter is 1.
-    The second expression produces an InterpException when interpreted because it doesn't return a numerical value as it should.
+    The second expression throws an InterpException when interpreted because it doesn't return a numerical value as it should.
 
 3.  The interpreter cannot evaluate the second expression because the value of the inner "let" is pushed and then popped off of the stack before the apply of the outer "let" is called.
