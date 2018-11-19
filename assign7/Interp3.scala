@@ -110,7 +110,6 @@ object Interp3 {
 
           case NumV(0) => interpE(env, e)
           case _ => interpE(env, t)
-
         }
 
         case Seq(e1,e2) => {
@@ -118,56 +117,92 @@ object Interp3 {
           val v2 = interpE(env,e2)
           v2
         }
+
         case Skip() => NumV(0)
 
         case Let(x,b,e) => {
-          val bVal = interpE(env, b)
-          var a : Addr = null
-          if(useHeap)
-            a = heap.allocate(1)
-          else
-            a = stack.push()
-          set(a, bVal)
-          val ret = interpE(env + (x -> a), e)
-          if(!useHeap)
-            stack.pop()
-          ret
-        }
-     
-        case LetRec(f,b,e) =>  interpE(env, b) match {
-          case ClosureV(x, b2, env) => {
+
+          //replaceE(b,x,Var("x_"))
+          /*if(callByName){
+            val newX : String = x + "_"
+            val newB = replaceE(b, x, Var(newX))
+            val newE = replaceE(e, x, Var(newX))
+
+            val a = heap.allocate(1)
+            val bVal = interpE(env, newB)
+            set(a, bVal)
+            interpE(env + (newX -> a), newE)
+          }
+          else{*/
+            val bVal = interpE(env, b)
             var a : Addr = null
             if(useHeap)
               a = heap.allocate(1)
             else
               a = stack.push()
-            val bVal = interpE(env + (f -> a), b)
             set(a, bVal)
-            val ret = interpE(env + (f -> a), e)
+            val ret = interpE(env + (x -> a), e)
             if(!useHeap)
               stack.pop()
             ret
-          }
+         // }
+        }
+     
+        case LetRec(f,b,e) => b match {
+          case Fun(x, fb) => {
+            /*if(callByName){
+              val newF : String = f + "_"
+              val newB = replaceE(b, f, Var(newF))
+              val newE = replaceE(e, f, Var(newF))
+
+              val a = heap.allocate(1)
+              val bVal = interpE(env + (newF -> a), newB)
+              set(a, bVal)
+              interpE(env + (newF -> a), newE)
+            }
+            else{*/
+              var a : Addr = null
+              if(useHeap)
+               a = heap.allocate(1)
+              else
+               a = stack.push()
+              val bVal = interpE(env + (f -> a), b)
+              set(a, bVal)
+              val ret = interpE(env + (f -> a), e)
+              if(!useHeap)
+                stack.pop()
+              ret
+            }
+         // }
           case _ => throw InterpException("Must pass fun to LetRec")
-        } 
+        }
 
         case Fun(x,b) => {
-          ClosureV(x, b, env)
+          /*if(callByName)
+            ClosureV(x + "_", replaceE(b, x, Var(x + "_")), env)*/
+          //else
+            ClosureV(x, b, env)
         }
 
         case Apply(f,e) => interpE(env, f) match {
-          case ClosureV(x, b, env2) => {
-            val func = interpE(env, e)
-            var a : Addr = null
-            if(useHeap)
-              a = heap.allocate(1)
-            else
-              a = stack.push()
-            set(a, func)
-            val ret = interpE(env2 + (x -> a), b)
-            if(!useHeap)
-              stack.pop()
-            ret
+          case ClosureV(x, b, cEnv) => {
+            if(callByName){
+              val rExpr = replaceE(b,x,e)
+              interpE(cEnv, rExpr)
+            }
+            else{
+              val func = interpE(env, e)
+              var a : Addr = null
+              if(useHeap)
+                a = heap.allocate(1)
+              else
+                a = stack.push()
+              set(a, func)
+              val ret = interpE(cEnv + (x -> a), b)
+              if(!useHeap)
+                stack.pop()
+              ret
+            }
           }
           case _ => throw InterpException("Must supply valid function to Apply")
         }
@@ -192,6 +227,46 @@ object Interp3 {
     } catch {
       case ex: InterpException => { println("Interp Error:" + ex.string) ; throw ex }
       case ex: ParseException => { println("Parser Error:" + ex.string) ; throw ex }
+    }
+  }
+
+  def replaceE(e:Expr,x:String,y:Expr): Expr = {
+    e match{
+      case Num(n) => e
+      case Var(x2) => {
+        if(x2 == x)
+          y
+        else
+          Var(x2)
+      }
+      case Add(l,r) => Add(replaceE(l,x,y),replaceE(r,x,y))
+      case Sub(l,r) => Sub(replaceE(l,x,y),replaceE(r,x,y))
+      case Mul(l,r) => Mul(replaceE(l,x,y),replaceE(r,x,y))
+      case Div(l,r) => Div(replaceE(l,x,y),replaceE(r,x,y))
+      case Le(l,r)  => Le(replaceE(l,x,y),replaceE(r,x,y))
+      case If(c,t,e) => If(replaceE(c,x,y),replaceE(t,x,y),replaceE(e,x,y))
+      case Seq(e1,e2) => Seq(replaceE(e1,x,y),replaceE(e2,x,y))
+      case Skip() => Skip()
+      case Fun(fx, b) => {
+        val aFx = replaceE(b, fx, Var(fx + "_"))
+        val abFx = replaceE(aFx, x, y)
+        Fun(fx + "_", abFx)
+      } 
+      case Apply(f,e) => Apply(replaceE(f,x,y),replaceE(e,x,y))
+      case Let(x2,b,e) => {
+        val aB = replaceE(b, x2, Var(x2 + "_"))
+        val abB = replaceE(aB, x, y)
+        val aE = replaceE(e, x2, Var(x2 + "_"))
+        val abE = replaceE(aE, x, y)
+        Let(x2 + "_", abB, abE)
+      }
+      case LetRec(f,b,e) => {
+        val aB = replaceE(b, f, Var(f + "_"))
+        val abB = replaceE(aB, x, y)
+        val aE = replaceE(e, f, Var(f + "_"))
+        val abE = replaceE(aE, x, y)
+        LetRec(f + "_", abB, abE)
+      }
     }
   }
 

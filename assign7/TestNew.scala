@@ -22,7 +22,7 @@ class TestNew extends FunSuite {
   val fibtCode = """(let fibt (fun n (letRec helper (fun m (fun a (fun b (if (<= m 2) a (@ (@ (@ helper (- m 1)) (+ a b)) a))))) (@ (@ (@ helper n) 1) 1))) (@ fibt 10))"""
 
   // fibonacci (cps)
-  val fibcCode = """()"""
+  val fibcCode = """(let fibc (fun n (letRec helper (fun n (fun c (if(<= n 2) (@ c 1) (@ (@ helper (- n 1)) (fun x (@ (@ helper (- n 2)) (fun y (@ c (+ x y)))))))))(@ (@ helper n) (fun x x)))) (@ fibc 10))"""
 
   // Test the programs with heap storage
 
